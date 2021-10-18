@@ -66,9 +66,9 @@ class CustomerTest {
 
         //when
         //Исходя из логики теста предположу что в 75 и 77 customer3 и customer1 должны быть поменяны местами. Что я и сделал
-        Map.Entry<Customer, String> biggestScore = customerService.getNext(customer3);
+        Map.Entry<Customer, String> biggestScore = customerService.getNext(customer1);
         //then
-        assertThat(biggestScore.getKey()).isEqualTo(customer1);
+        assertThat(biggestScore.getKey()).isEqualTo(customer3);
 
         //when
         Map.Entry<Customer, String> notExists = customerService.getNext(new Customer(100, "Not exists", 20000));

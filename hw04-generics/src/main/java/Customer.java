@@ -31,7 +31,7 @@ public class Customer {
     }
 
     public void setScores(long scores) {
-        this.scores = scores;
+        if (this.scores == 0L)this.scores = scores;
     }
 
     @Override
