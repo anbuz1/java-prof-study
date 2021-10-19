@@ -1,6 +1,4 @@
-import java.util.Comparator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class CustomerService {
 
@@ -11,11 +9,15 @@ public class CustomerService {
     }
 
     public Map.Entry<Customer, String> getSmallest() {
-        return mapOfCustomers.firstEntry();
+        Map.Entry<Customer, String> temp = mapOfCustomers.firstEntry();
+        if (temp == null) return null;
+        return new AbstractMap.SimpleEntry<>(new Customer(temp.getKey()), temp.getValue());
     }
 
     public Map.Entry<Customer, String> getNext(Customer customer) {
-        return mapOfCustomers.higherEntry(customer);
+        Map.Entry<Customer, String> temp = mapOfCustomers.higherEntry(customer);
+        if (temp == null) return null;
+        return new AbstractMap.SimpleEntry<>(new Customer(temp.getKey()), temp.getValue());
     }
 
     public void add(Customer customer, String data) {

@@ -13,6 +13,11 @@ public class Customer {
         this.name = name;
         this.scores = scores;
     }
+    public Customer(Customer customer){
+        this.id = customer.id;
+        this.name = customer.name;
+        this.scores = customer.scores;
+    }
 
     public long getId() {
         return id;
@@ -23,7 +28,7 @@ public class Customer {
     }
 
     public void setName(String name) {
-        if (this.name == null) this.name = name;
+        this.name = name;
     }
 
     public long getScores() {
@@ -31,7 +36,7 @@ public class Customer {
     }
 
     public void setScores(long scores) {
-        if (this.scores == 0L)this.scores = scores;
+        this.scores = scores;
     }
 
     @Override
