@@ -1,3 +1,4 @@
 rootProject.name = 'java-prof-study'
 include 'hw01-gradle'
+include 'hw04-generics'
 
