@@ -1,12 +1,13 @@
 package tests_pack;
 
-import anotations.AfterTest;
-import anotations.BeforeTest;
-import anotations.Test;
+import annotations.AfterTest;
+import annotations.BeforeTest;
+import annotations.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 
+@Test
 public class Check {
 
     private int firstArg;
@@ -50,8 +51,6 @@ public class Check {
             }else
             if (element>x) throw new RuntimeException("Arrays is not revers ordered");
             else x = element;
-
         }
-
     }
 }

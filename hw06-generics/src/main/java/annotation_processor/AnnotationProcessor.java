@@ -12,33 +12,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-public final class Processor {
+public final class AnnotationProcessor {
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
 
 
     public static void start(String path) {
-        List<Processing> processingList = new ArrayList<>();
+        List<ProcessorEngine> processorEngineList = new ArrayList<>();
         for (Class<?> aClass : scanPackage(path)) {
-            if (isContainNeededAnnotation(aClass)) processingList.add(new Processing(aClass));
+            if (isContainNeededAnnotation(aClass)) processorEngineList.add(new ProcessorEngine(aClass));
         }
         try {
             ExecutorService executorService = Executors.newCachedThreadPool();
-            List<Future<List<Result>>> futureList = executorService.invokeAll(processingList);
+            List<Future<List<Result>>> futureList = executorService.invokeAll(processorEngineList);
             futureList.forEach(r -> {
                 try {
                     System.out.println("----------------------------------------------------------");
                     for (Result result : r.get()) {
                         System.out.println("______________________________________");
-                        System.out.println("Test class: " + result.getClassName());
-                        System.out.println("Test name: " + result.getMethodName());
-                        System.out.println("Test description: " + result.getTestDescription());
+                        System.out.println(ANSI_BLUE + "Test class: " + ANSI_RESET + result.getClassName());
+                        System.out.println(ANSI_BLUE + "Test name: " + ANSI_RESET + result.getMethodName());
+                        System.out.println(ANSI_BLUE + "Test description: " + ANSI_RESET + result.getTestDescription());
 
                         if(result.isStatus()){
-                            System.out.println("Test status: success");
+                            System.out.println(ANSI_YELLOW + "Test status: " + ANSI_GREEN + "success" + ANSI_RESET);
                         }else{
-                            System.out.println("Test status: fail");
-                            System.out.println(result.getException());
-                            System.out.println("______________________________________");
+                            System.out.println(ANSI_YELLOW + "Test status: " + ANSI_RED + "fail" + ANSI_RESET);
+                            System.out.print(ANSI_BLUE + "Exception in test: " + ANSI_RED + result.getException() + ANSI_RESET);
                         }
+                        System.out.println("______________________________________");
 
                     }
                     System.out.println("----------------------------------------------------------");
@@ -51,8 +56,6 @@ public final class Processor {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-
     }
 
     private static List<Class<?>> scanPackage(String path) {
@@ -74,8 +77,6 @@ public final class Processor {
                     }
                 }
             }
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,10 +84,11 @@ public final class Processor {
     }
 
     private static boolean isContainNeededAnnotation(Class<?> clazz) {
+        if(clazz.isAnnotationPresent(annotations.Test.class))return true;
 
         for (Method method : clazz.getMethods()) {
             for (Annotation declaredAnnotation : method.getDeclaredAnnotations()) {
-                if (declaredAnnotation.annotationType().getName().contains("anotations."))
+                if (declaredAnnotation.annotationType().getName().contains("annotations."))
                     return true;
             }
         }

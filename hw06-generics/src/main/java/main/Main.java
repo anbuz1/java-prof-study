@@ -1,4 +1,6 @@
-import static annotation_processor.Processor.start;
+package main;
+
+import static annotation_processor.AnnotationProcessor.start;
 
 public class Main {
     public static void main(String[] args) {

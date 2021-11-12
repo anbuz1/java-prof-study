@@ -1,6 +1,6 @@
 package annotation_processor;
 
-import anotations.Test;
+import annotations.Test;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public final class Processing implements Callable<List<Result>> {
+public final class ProcessorEngine implements Callable<List<Result>> {
 
     private final Class aClass;
 
-    Processing(Class aClass) {
+    ProcessorEngine(Class aClass) {
         this.aClass = aClass;
     }
 
@@ -39,7 +39,7 @@ public final class Processing implements Callable<List<Result>> {
             try {
                 method.invoke(object);
             }catch (Exception e){
-                exceptions.append("Exception in test: ").append(e.getCause()).append("\n");
+                exceptions.append(e.getCause()).append("\n");
             }
 
             for (Method afterMeth : listMap.get("After")) {
@@ -67,11 +67,11 @@ public final class Processing implements Callable<List<Result>> {
 
         for (Method method : aClass.getMethods()) {
             for (Annotation declaredAnnotation : method.getDeclaredAnnotations()) {
-                if (declaredAnnotation.annotationType().getName().equals("anotations.Test"))
+                if (declaredAnnotation.annotationType().getName().equals("annotations.Test"))
                     testMethods.add(method);
-                if (declaredAnnotation.annotationType().getName().equals("anotations.BeforeTest"))
+                if (declaredAnnotation.annotationType().getName().equals("annotations.BeforeTest"))
                     beforeMethods.add(method);
-                if (declaredAnnotation.annotationType().getName().equals("anotations.AfterTest"))
+                if (declaredAnnotation.annotationType().getName().equals("annotations.AfterTest"))
                     afterMethods.add(method);
             }
         }
@@ -86,7 +86,7 @@ public final class Processing implements Callable<List<Result>> {
 
     private String getDescription(Method method) {
         for (Annotation declaredAnnotation : method.getDeclaredAnnotations()) {
-            if (declaredAnnotation.annotationType().getName().equals("anotations.Test")) {
+            if (declaredAnnotation.annotationType().getName().equals("annotations.Test")) {
                 Test test = (Test) declaredAnnotation;
                 return test.description();
             }
