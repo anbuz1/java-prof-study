@@ -1,4 +1,4 @@
-package tests_pack;
+package tests;
 
 import annotations.AfterTest;
 import annotations.BeforeTest;

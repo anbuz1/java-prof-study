@@ -1,12 +1,12 @@
-package annotation_processor;
+package annotation.processor;
 
 public class Result {
 
     private boolean status;
-    private String testDescribe;
-    private String className;
+    private final String testDescribe;
+    private final String className;
+    private final String methodName;
     private String exception;
-    private String methodName;
 
 
     public Result(String methodName, String testDescribe, String className) {
