@@ -6,10 +6,7 @@ import annotations.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class ProcessorEngine {
 
@@ -24,9 +21,9 @@ public final class ProcessorEngine {
         Map<AnnotationType, List<Method>> listMap = getMapWithSortedMethods();
         for (Method method : listMap.get(AnnotationType.TEST)) {
             Result result = new Result(method.getName(), getDescrFromMethodWithTestAnn(method), aClass.getName());
-            Constructor constructor = aClass.getConstructor();
+            Constructor<?> constructor = aClass.getConstructor();
             StringBuilder exceptions = new StringBuilder();
-            Object object = aClass.cast(constructor.newInstance());
+            Object object = constructor.newInstance();
 
             for (Method beforeMeth : listMap.get(AnnotationType.BEFORE)) {
                 try {
@@ -35,21 +32,24 @@ public final class ProcessorEngine {
                     exceptions.append("Exception in before stage: ").append(e.getCause()).append("\n");
                 }
             }
-
-            try {
-                method.invoke(object);
-            } catch (Exception e) {
-                exceptions.append(e.getCause()).append("\n");
-            }
-
-            for (Method afterMeth : listMap.get(AnnotationType.AFTER)) {
+            if (exceptions.length() == 0) {
                 try {
-                    afterMeth.invoke(object);
+                    method.invoke(object);
                 } catch (Exception e) {
-                    exceptions.append("Exception in after stage: ").append(e.getCause()).append("\n");
+                    exceptions.append(e.getCause()).append("\n");
+                }
+                if (exceptions.length() == 0) {
+                    result.setStatus(true);
+                }
+
+                for (Method afterMeth : listMap.get(AnnotationType.AFTER)) {
+                    try {
+                        afterMeth.invoke(object);
+                    } catch (Exception e) {
+                        exceptions.append("Exception in after stage: ").append(e.getCause()).append("\n");
+                    }
                 }
             }
-            if (exceptions.length() == 0) result.setStatus(true);
 
             result.setException(exceptions.toString());
 
@@ -64,7 +64,7 @@ public final class ProcessorEngine {
         List<Method> testMethods = new ArrayList<>();
         List<Method> beforeMethods = new ArrayList<>();
         List<Method> afterMethods = new ArrayList<>();
-        Map<AnnotationType, List<Method>> listMap = new HashMap<>();
+        EnumMap<AnnotationType, List<Method>> listMap = new EnumMap<>(AnnotationType.class);
 
         for (Method method : aClass.getMethods()) {
             if (method.isAnnotationPresent(Test.class))

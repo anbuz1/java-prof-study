@@ -10,13 +10,13 @@ public final class AnnotationProcessor {
     public static final String ANSI_BLUE = "\u001B[34m";
 
 
-    public static void start(String className) {
+    public void start(String className) {
 
         try {
             ProcessorEngine processorEngine = new ProcessorEngine(Class.forName(className));
             List<Result> futureList = processorEngine.process();
             System.out.println("----------------------------------------------------------");
-            futureList.forEach(AnnotationProcessor::accept);
+            futureList.forEach(AnnotationProcessor::printResult);
             System.out.println("----------------------------------------------------------");
         } catch (Exception e) {
             e.printStackTrace();
@@ -24,7 +24,7 @@ public final class AnnotationProcessor {
     }
 
 
-    private static void accept(Result r) {
+    private static void printResult(Result r) {
 
         System.out.println("______________________________________");
         System.out.println(ANSI_BLUE + "Test class: " + ANSI_RESET + r.getClassName());

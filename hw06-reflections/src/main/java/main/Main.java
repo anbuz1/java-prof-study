@@ -1,15 +1,17 @@
 package main;
 
-import static annotation.processor.AnnotationProcessor.start;
+import annotation.processor.AnnotationProcessor;
 
 public class Main {
     public static void main(String[] args) {
-        //line 8 only for demonstration
-        if(args.length==0){start("tests.Check");}
+
+        AnnotationProcessor annotationProcessor= new AnnotationProcessor();
+        //line 10 only for demonstration
+        if(args.length==0){annotationProcessor.start("tests.Check");}
 
         for (String arg : args) {
             if(arg!=null){
-                start(arg);
+                annotationProcessor.start(arg);
             }
         }
     }
