@@ -3,14 +3,14 @@ package calculator;
 public class Data {
 
 
-    private Integer value;
+    private int value;
 
     private static final Data data = new Data();
 
     private Data() {
     }
 
-    public Integer getValue() {
+    public int getValue() {
         return value;
     }
 
