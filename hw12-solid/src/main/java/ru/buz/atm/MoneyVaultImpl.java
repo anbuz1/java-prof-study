@@ -1,49 +1,51 @@
 package ru.buz.atm;
 
+import ru.buz.currency.ATMCurrency;
 import ru.buz.exceptions.ATMExceptions;
 import ru.buz.exceptions.GiveOutMoneyException;
 import ru.buz.exceptions.NoRequestedCurrencyInVaultException;
 import ru.buz.exceptions.NotEnoughMoneyException;
-import ru.buz.currency.Currency;
 import ru.buz.currency.CurrencyValue;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MoneyVaultImpl implements MoneyVault {
 
     Map<String, SortedSet<CurrencyValue>> mapCurrencyValues;
-    Map<String, Map<CurrencyValue, List<ru.buz.currency.Currency>>> mapCurrencies;
+    Map<String, Map<CurrencyValue, List<ATMCurrency>>> mapCurrencies;
+    private long availableAmount;
 
-    public MoneyVaultImpl(List<Currency> currencies) {
+    public MoneyVaultImpl(List<ATMCurrency> currencies) {
         mapCurrencies = new HashMap<>();
         mapCurrencyValues = new HashMap<>();
         sortAndAddValues(currencies);
-        loadMoney(currencies);
+        availableAmount = loadMoney(currencies);
 
     }
 
     @Override
-    public long loadMoney(Currency[] currencies) {
+    public long loadMoney(ATMCurrency[] currencies) {
         return loadMoney(Arrays.asList(currencies));
     }
 
-    public long loadMoney(List<Currency> currencies) {
+    public long loadMoney(List<ATMCurrency> currencies) {
         AtomicLong result = new AtomicLong();
         currencies.forEach(c -> {
-            Map<CurrencyValue, List<Currency>> currencyListMap =
+            Map<CurrencyValue, List<ATMCurrency>> currencyListMap =
                     mapCurrencies.computeIfAbsent(c.getCurrency(), k -> new HashMap<>());
 
-            List<Currency> currencyImplList =
+            List<ATMCurrency> currencyImplList =
                     currencyListMap.computeIfAbsent(c.getCurrencyValue(), k -> new ArrayList<>());
             result.addAndGet(c.getCurrencyValue().getValue());
             currencyImplList.add(c);
         });
-
+        availableAmount += result.get();
         return result.get();
     }
 
     @Override
-    public List<ru.buz.currency.Currency> giveMoney(final int amount, java.util.Currency currency) throws ATMExceptions {
+    public List<ATMCurrency> giveMoney(final int amount, java.util.Currency currency) throws ATMExceptions {
         Map<CurrencyValue, Integer> resultMap = new HashMap<>();
         int copyAmount = amount;
         String currCode = currency.getCurrencyCode();
@@ -84,7 +86,7 @@ public class MoneyVaultImpl implements MoneyVault {
         return mapCurrencyValues.get(currency.getCurrencyCode());
     }
 
-    private void sortAndAddValues(List<Currency> currencies) {
+    private void sortAndAddValues(List<ATMCurrency> currencies) {
         currencies.forEach(p -> {
             SortedSet<CurrencyValue> setOfCurrencyValues =
                     mapCurrencyValues.computeIfAbsent(p.getCurrency(),
@@ -93,7 +95,7 @@ public class MoneyVaultImpl implements MoneyVault {
         });
     }
 
-    private long getAvailableAmount(Map<CurrencyValue, List<Currency>> currencies) throws NoRequestedCurrencyInVaultException {
+    private long getAvailableAmount(Map<CurrencyValue, List<ATMCurrency>> currencies) throws NoRequestedCurrencyInVaultException {
         if (currencies == null) {
             throw new NoRequestedCurrencyInVaultException("ATM has no requested currency");
         }
@@ -112,16 +114,23 @@ public class MoneyVaultImpl implements MoneyVault {
                 .get(currencyValue).size();
     }
 
-    private List<Currency> getMoneyFromVault(Map<CurrencyValue, Integer> resultMap, String currCode) {
-        List<Currency> resultListCurr = new ArrayList<>();
+    private List<ATMCurrency> getMoneyFromVault(Map<CurrencyValue, Integer> resultMap, String currCode) {
+        long resultAmount = 0;
+        List<ATMCurrency> resultListCurr = new ArrayList<>();
         for (CurrencyValue currencyValue : resultMap.keySet()) {
-            List<Currency> tempListCurr = mapCurrencies.get(currCode).get(currencyValue);
+            List<ATMCurrency> tempListCurr = mapCurrencies.get(currCode).get(currencyValue);
             for (int i = 0; i < resultMap.get(currencyValue); i++) {
-                resultListCurr.add(tempListCurr.get(i));
+                ATMCurrency atmCurrency = tempListCurr.get(i);
+                resultListCurr.add(atmCurrency);
+                resultAmount+=atmCurrency.getCurrencyValue().getValue();
             }
             resultListCurr.forEach(tempListCurr::remove);
         }
+        availableAmount -= resultAmount;
         return resultListCurr;
     }
 
+    public long getAvailableAmount() {
+        return availableAmount;
+    }
 }
