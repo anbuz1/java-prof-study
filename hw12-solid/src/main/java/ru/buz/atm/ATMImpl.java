@@ -3,10 +3,6 @@ package ru.buz.atm;
 import ru.buz.currency.ATMCurrency;
 import ru.buz.exceptions.*;
 import ru.buz.currency.CurrencyValue;
-import ru.buz.user.Account;
-import ru.buz.user.AccountDetails;
-import ru.buz.user.User;
-
 import java.util.Currency;
 import java.util.List;
 import java.util.Set;
@@ -36,8 +32,7 @@ public final class ATMImpl implements ATM {
 
 
     @Override
-    public boolean loadMoney(ATMCurrency[] currencies) {
+    public void loadMoney(ATMCurrency[] currencies) {
         moneyVault.loadMoney(currencies);
-        return true;
     }
 }

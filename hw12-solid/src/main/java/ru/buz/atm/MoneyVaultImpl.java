@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MoneyVaultImpl implements MoneyVault {
 
-    Map<String, SortedSet<CurrencyValue>> mapCurrencyValues;
-    Map<String, Map<CurrencyValue, List<ATMCurrency>>> mapCurrencies;
+    private final Map<String, SortedSet<CurrencyValue>> mapCurrencyValues;
+    private final Map<String, Map<CurrencyValue, List<ATMCurrency>>> mapCurrencies;
     private long availableAmount;
 
     public MoneyVaultImpl(List<ATMCurrency> currencies) {
@@ -34,7 +34,6 @@ public class MoneyVaultImpl implements MoneyVault {
         currencies.forEach(c -> {
             Map<CurrencyValue, List<ATMCurrency>> currencyListMap =
                     mapCurrencies.computeIfAbsent(c.getCurrency(), k -> new HashMap<>());
-
             List<ATMCurrency> currencyImplList =
                     currencyListMap.computeIfAbsent(c.getCurrencyValue(), k -> new ArrayList<>());
             result.addAndGet(c.getCurrencyValue().getValue());
