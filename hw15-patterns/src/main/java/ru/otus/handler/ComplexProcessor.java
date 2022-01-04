@@ -37,12 +37,6 @@ public class ComplexProcessor implements Handler {
                         ex = e;
                     }
                 }while (ex != null);
-
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
             }
         }
         notify(newMsg);
