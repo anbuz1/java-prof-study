@@ -27,6 +27,22 @@ public class ComplexProcessor implements Handler {
                 newMsg = pros.process(newMsg);
             } catch (Exception ex) {
                 errorHandler.accept(ex);
+                do{
+                    ex = null;
+                    try {
+                        Thread.sleep(500);
+                        newMsg = pros.process(newMsg);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ex = e;
+                    }
+                }while (ex != null);
+
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
         notify(newMsg);
