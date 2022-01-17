@@ -5,23 +5,25 @@ import javax.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "client")
+@Table(name = "client",uniqueConstraints = {
+        @UniqueConstraint(columnNames = "ID"),
+        @UniqueConstraint(columnNames = "ADDRESS") })
 public class Client implements Cloneable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID")
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "NAME")
     private String name;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "id",updatable = false)
+    @OneToMany(cascade=CascadeType.ALL)
+    @JoinColumn(name="PHONE",nullable = false,updatable = false)
     private List<Phone> phone;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "id")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "ADDRESS",unique = true)
     private Address address;
 
 

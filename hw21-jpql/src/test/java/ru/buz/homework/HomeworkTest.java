@@ -59,7 +59,7 @@ class HomeworkTest {
             }
         });
 
-        var client = new Client(null, "Vasya", new Address(null, "AnyStreet"), List.of(new Phone(null, "13-555-22")));
+        var client = new Client(null, "Vasya", new Address(null, "AnyStreet"), List.of(new Phone(null, "13-555-22"),new Phone(null, "13-555-23")));
         try (var session = sessionFactory.openSession()) {
             session.getTransaction().begin();
             session.persist(client);

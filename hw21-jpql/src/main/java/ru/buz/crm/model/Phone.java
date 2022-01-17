@@ -3,23 +3,51 @@ package ru.buz.crm.model;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "phone")
+@Table(name = "phone",uniqueConstraints = {
+        @UniqueConstraint(columnNames = "PHONE_ID")})
 public class Phone {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "PHONE_ID", unique = true, nullable = false)
+    private Long phoneId;
 
-    @Column(name = "phone")
-    String phone;
+    @Column(name = "STUDENT_PHONE", length = 100)
+    private String phone;
+
+    @ManyToOne
+    private Client client;
 
 
     public Phone(Long id, String phone) {
-        this.id = id;
+        this.phoneId = id;
         this.phone = phone;
     }
 
     public Phone() {
+    }
+
+    public Long getPhoneId() {
+        return phoneId;
+    }
+
+    public void setPhoneId(Long phoneId) {
+        this.phoneId = phoneId;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 }
