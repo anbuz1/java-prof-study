@@ -15,10 +15,6 @@ public class Phone {
     @Column(name = "STUDENT_PHONE", length = 100)
     private String phone;
 
-    @ManyToOne
-    private Client client;
-
-
     public Phone(Long id, String phone) {
         this.phoneId = id;
         this.phone = phone;
@@ -41,13 +37,5 @@ public class Phone {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public Client getClient() {
-        return client;
-    }
-
-    public void setClient(Client client) {
-        this.client = client;
     }
 }

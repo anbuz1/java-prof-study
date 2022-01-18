@@ -7,7 +7,7 @@ import java.util.List;
 @Entity
 @Table(name = "client",uniqueConstraints = {
         @UniqueConstraint(columnNames = "ID"),
-        @UniqueConstraint(columnNames = "ADDRESS") })
+        @UniqueConstraint(columnNames = "ADDRESS_ID") })
 public class Client implements Cloneable {
 
     @Id
@@ -18,13 +18,13 @@ public class Client implements Cloneable {
     @Column(name = "NAME")
     private String name;
 
-    @OneToMany(cascade=CascadeType.ALL)
-    @JoinColumn(name="PHONE",nullable = false,updatable = false)
-    private List<Phone> phone;
+    @OneToMany(cascade=CascadeType.ALL,orphanRemoval = true)
+    @JoinColumn(name = "CLIENT_ID",nullable = false,updatable = false)
+    private List<Phone> phoneList;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "ADDRESS",unique = true)
-    private Address address;
+    @JoinColumn(name = "ADDRESS_ID",unique = true)
+    private Address addressId;
 
 
     public Client() {
@@ -43,8 +43,8 @@ public class Client implements Cloneable {
     public Client(Long id, String name, Address address, List<Phone> phone) {
         this.id = id;
         this.name = name;
-        this.address = address;
-        this.phone = phone;
+        this.addressId = address;
+        this.phoneList = phone;
     }
 
     @Override
@@ -69,19 +69,19 @@ public class Client implements Cloneable {
     }
 
     public Address getAddress() {
-        return address;
+        return addressId;
     }
 
     public void setAddress(Address address) {
-        this.address = address;
+        this.addressId = address;
     }
 
-    public List<Phone> getPhone() {
-        return phone;
+    public List<Phone> getPhoneList() {
+        return phoneList;
     }
 
-    public void setPhone(List<Phone> phone) {
-        this.phone = phone;
+    public void setPhoneList(List<Phone> phoneList) {
+        this.phoneList = phoneList;
     }
 
     @Override
