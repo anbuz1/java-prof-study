@@ -5,7 +5,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "phone",uniqueConstraints = {
         @UniqueConstraint(columnNames = "PHONE_ID")})
-public class Phone {
+public class Phone implements Cloneable{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,4 +38,10 @@ public class Phone {
     public void setPhone(String phone) {
         this.phone = phone;
     }
+
+    @Override
+    public Phone clone(){
+        return new Phone(this.phoneId,this.phone);
+    }
+
 }
