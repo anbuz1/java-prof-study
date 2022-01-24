@@ -112,7 +112,7 @@ public class DbServiceDemo {
         System.out.println("TOTAL TIME: " + (end - start));
         System.out.println("--------------------------------End2 select from cache-------------------------------------");
 
-        System.out.println("CACHE_SIZE: " + buzCache.size());
+        System.out.println("CACHE_SIZE: " + buzCache.size(Client.class));
         for (int i = 500; i <= 13000; i++) {
             Client tempClient = new Client((long) i, "Vasya_" + i, new Address(null, "AnyStreet"), List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23")));
             try {

@@ -16,14 +16,18 @@ public class BuzCacheImpl implements BuzCache {
     private final Map<Class<?>, Integer> mapSize;
     private final Map<Class<?>, Map<Field, Map<Object, List<Integer>>>> bigMap;
     private final List<WeakReference<?>> objectList;
-    private final Field idField;
+    private Field idField;
 
-    public BuzCacheImpl(Class<?>... aClass) throws NoSuchFieldException {
+    public BuzCacheImpl(Class<?>... aClass)  {
         bigMap = new HashMap<>();
         methodMap = new HashMap<>();
         objectList = new ArrayList<>();
         mapSize = new HashMap<>();
-        idField = BuzCacheImpl.class.getDeclaredField("idField");
+        try {
+            idField = BuzCacheImpl.class.getDeclaredField("idField");
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
         for (Class<?> clazz : aClass) {
             for (Method method : clazz.getMethods()) {
                 if (method.isAnnotationPresent(CacheId.class)) {
@@ -36,10 +40,6 @@ public class BuzCacheImpl implements BuzCache {
             }
             bigMap.put(clazz, proceedObjectMap(clazz));
         }
-    }
-
-    private BuzCacheImpl() throws NoSuchFieldException {
-        this(new Class[0]);
     }
 
 
@@ -218,6 +218,4 @@ public class BuzCacheImpl implements BuzCache {
         }
         return resultList;
     }
-
-
 }
