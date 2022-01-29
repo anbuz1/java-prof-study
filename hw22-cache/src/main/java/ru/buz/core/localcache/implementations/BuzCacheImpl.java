@@ -18,7 +18,7 @@ public class BuzCacheImpl implements BuzCache {
     private final List<WeakReference<?>> objectList;
     private Field idField;
 
-    public BuzCacheImpl(Class<?>... aClass)  {
+    public BuzCacheImpl(Class<?>... aClass) {
         bigMap = new HashMap<>();
         methodMap = new HashMap<>();
         objectList = new ArrayList<>();
@@ -45,24 +45,28 @@ public class BuzCacheImpl implements BuzCache {
 
     @Override
     public void add(Object obj) throws PutInCacheException {
-        add(-1, obj);
+        add(null, obj);
     }
 
 
     @Override
-    public void add(long id, Object obj) throws PutInCacheException {
+    public void add(Object id, Object obj) throws PutInCacheException {
         Class<?> aClass = obj.getClass();
-        if(id<=0){
+        Integer size = mapSize.get(aClass);
+        if (id == null) {
             id = getObjectId(obj, aClass);
         }
-        if(id<=0){
+        if (id == null) {
             throw new PutInCacheException("Can't find method to get id for: " + aClass.getName());
         }
         Optional<?> o = get(id, aClass);
-        if(o.isPresent()){
-            delete(id,aClass);
+        if (o.isPresent()) {
+            update(id, o.get(), obj);
+            size = size + 1;
+            mapSize.put(aClass, size);
+            return;
         }
-        Integer size = mapSize.get(aClass);
+
         if (size == null) {
             addObject(aClass, obj, id);
         } else {
@@ -74,28 +78,23 @@ public class BuzCacheImpl implements BuzCache {
                 throw new PutInCacheException("Reached limit cache size");
             }
         }
-
-
     }
 
 
     @Override
-    public <T> Optional<T> get(long id, Class<T> aClass) {
-
-        Map<Field, Map<Object, List<Integer>>> fieldMapMap = bigMap.get(aClass);
-        Map<Object, List<Integer>> objectIntegerMap = fieldMapMap.get(idField);
-        List<Integer> indices = objectIntegerMap.get(id);
-        if(indices != null){
-            WeakReference<?> reference = objectList.get(indices.get(0));
+    public <T> Optional<T> get(Object id, Class<T> aClass) {
+        Integer index = getIndex(id, aClass);
+        if (index != null) {
+            WeakReference<?> reference = objectList.get(index);
             T result = (T) reference.get();
-            if(result == null){
-                delete(id,aClass);
+            if (result == null) {
                 return Optional.empty();
             }
             return Optional.of(result);
         }
         return Optional.empty();
     }
+
     @Override
     public <T> List<T> get(String field, Object value, Class<T> aClass) {
         Field declaredField;
@@ -105,25 +104,16 @@ public class BuzCacheImpl implements BuzCache {
             e.printStackTrace();
             return new ArrayList<>();
         }
-        return get(declaredField,value,aClass);
+        return get(declaredField, value, aClass);
+
     }
 
     @Override
-    public void delete(long id, Class<?> aClass) {
+    public void delete(Object id, Class<?> aClass) {
         Map<Field, Map<Object, List<Integer>>> fieldMapMap = bigMap.get(aClass);
-        Map<Object, List<Integer>> objectListMap = fieldMapMap.get(idField);
-        List<Integer> indices = objectListMap.get(id);
-        Integer index = indices.get(0);
+        Integer index = getIndex(id, aClass);
         fieldMapMap.values().forEach(map -> map.values().forEach(list -> list.remove(index)));
-        fieldMapMap.values().forEach(map -> map.values().removeIf(list ->list.size()==0));
-        Integer size = mapSize.get(aClass);
-        size = size + 1;
-        mapSize.put(aClass, size);
-    }
-    private void delete(Integer index, Class<?> aClass) {
-        Map<Field, Map<Object, List<Integer>>> fieldMapMap = bigMap.get(aClass);
-        fieldMapMap.values().forEach(map -> map.values().forEach(list -> list.remove(index)));
-        fieldMapMap.values().forEach(map -> map.values().removeIf(list ->list.size()==0));
+        fieldMapMap.values().forEach(map -> map.values().removeIf(list -> list.size() == 0));
         Integer size = mapSize.get(aClass);
         size = size + 1;
         mapSize.put(aClass, size);
@@ -132,15 +122,15 @@ public class BuzCacheImpl implements BuzCache {
     @Override
     public void delete(Object obj) {
         Class<?> aClass = obj.getClass();
-        long id = getObjectId(obj, aClass);
-        if(id>0){
-            delete(id,aClass);
+        Object id = getObjectId(obj, aClass);
+        if (id != null) {
+            delete(id, aClass);
         }
     }
 
     @Override
-    public void clearCache(){
-        if (objectList.size()!=0){
+    public void clearCache() {
+        if (objectList.size() != 0) {
             objectList.clear();
             bigMap.values().forEach(map -> map.values().forEach(Map::clear));
             bigMap.values().forEach(Map::clear);
@@ -173,49 +163,87 @@ public class BuzCacheImpl implements BuzCache {
         return fieldMap;
     }
 
-    private void addObject(Class<?> aClass, Object obj, long id) throws PutInCacheException {
+    private void addObject(Class<?> aClass, Object obj, Object id) throws PutInCacheException {
         WeakReference<Object> weakReference = new WeakReference<>(obj);
         objectList.add(weakReference);
         int objectIndex = objectList.size() - 1;
         Map<Field, Map<Object, List<Integer>>> objectMap = bigMap.computeIfAbsent(aClass, key -> proceedObjectMap(aClass));
         objectMap.get(idField).put(id, new ArrayList<>(Arrays.asList(objectIndex)));
-            for (Field field : aClass.getDeclaredFields()) {
-                try {
-                    field.setAccessible(true);
-                    Object key = field.get(obj);
-                    List<Integer> values = objectMap.get(field).computeIfAbsent(key, k -> new ArrayList<>());
-                    values.add(objectIndex);
-                } catch (IllegalAccessException ignored) {
-                }
+        for (Field field : aClass.getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+                Object key = field.get(obj);
+                List<Integer> values = objectMap.get(field).computeIfAbsent(key, k -> new ArrayList<>());
+                values.add(objectIndex);
+            } catch (IllegalAccessException ignored) {
             }
+        }
     }
 
-    private long getObjectId(Object o, Class<?> aClass) {
+    private Object getObjectId(Object o, Class<?> aClass) {
         Method methodForId = methodMap.get(aClass);
         if (methodForId != null) {
             try {
-                return (long) methodForId.invoke(o);
+                return methodForId.invoke(o);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         }
-        return -1;
+        return null;
     }
 
-    private  <T> List<T> get(Field field, Object value, Class<T> aClass) {
+    private <T> List<T> get(Field field, Object value, Class<T> aClass) {
 
-            List<T> resultList = new ArrayList<>();
+        List<T> resultList = new ArrayList<>();
         List<Integer> indices = new ArrayList<>();
-                indices.addAll(bigMap.get(aClass).get(field).get(value));
+        List<Integer> indexList = bigMap.get(aClass).get(field).get(value);
+        if (indexList == null) {
+            return resultList;
+        }
+        indices.addAll(indexList);
 
         for (Integer index : indices) {
-            WeakReference<?> reference = objectList.get(index);
-            T result = (T) reference.get();
-            if(result == null){
-                delete(index,aClass);
+            WeakReference<?> reference;
+            T result = null;
+            if ((reference = objectList.get(index)) != null) {
+                result = (T) reference.get();
+                resultList.add(result);
             }
-            resultList.add(result);
         }
         return resultList;
     }
+
+    private void update(Object id, Object oldObj, Object newObj) throws PutInCacheException {
+        Class<?> aClass = oldObj.getClass();
+        Integer index = getIndex(id, aClass);
+        objectList.set(index, null);
+        addObject(aClass, newObj, id);
+    }
+
+    private Integer getIndex(Object id, Class<?> aClass) {
+        Map<Field, Map<Object, List<Integer>>> fieldMapMap = bigMap.get(aClass);
+        Map<Object, List<Integer>> objectListMap = fieldMapMap.get(idField);
+        List<Integer> indices;
+        if ((indices = objectListMap.get(id)) == null) {
+            if (id instanceof Integer) {
+                Long x = Long.valueOf((Integer) id);
+                if ((indices = objectListMap.get(x)) == null) {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+        return indices.get(0);
+    }
+
+//    private void delete(Integer index, Class<?> aClass) {
+//        Map<Field, Map<Object, List<Integer>>> fieldMapMap = bigMap.get(aClass);
+//        fieldMapMap.values().forEach(map -> map.values().forEach(list -> list.remove(index)));
+//        fieldMapMap.values().forEach(map -> map.values().removeIf(list -> list.size() == 0));
+//        Integer size = mapSize.get(aClass);
+//        size = size + 1;
+//        mapSize.put(aClass, size);
+//    }
+
 }

@@ -1,8 +1,7 @@
 package ru.buz.core.localcache.implementations;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 import ru.buz.core.localcache.anotations.CacheId;
 import ru.buz.core.localcache.anotations.Cacheable;
 import ru.buz.core.localcache.exceptions.PutInCacheException;
@@ -12,90 +11,68 @@ import ru.buz.crm.model.Client;
 import ru.buz.crm.model.Phone;
 import java.util.ArrayList;
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.buz.core.localcache.implementations.CacheManager.getBuzCacheInstance;
 
 class BuzCacheImplTest {
 
-
-    private BuzCache buzCache;
-
-    private ClientMock testClient;
-    private ClientMock extraClient;
-    private Address testAddress;
-    private List<ClientMock> clientList;
-    private List<Phone> phones;
-
-
-    @BeforeEach
-    void initialize() {
-        buzCache = getBuzCacheInstance(Phone.class, ClientMock.class, Address.class);
-        clientList = new ArrayList<>();
-        phones = List.of(new Phone(1L, "13-555-22"), new Phone(2L, "13-555-23"));
-
-        for (int i = 1; i <= 500; i++) {
-            Address tempAddress = new Address((long) i, "AnyStreet");
-
-            ClientMock tempClient = new ClientMock((long) i, "Vasili_" + i,
-                    tempAddress,
-                    phones);
-            clientList.add(tempClient);
-            if (i == 201) {
-                testClient = tempClient;
-                testAddress = tempAddress;
-            }
-        }
-        extraClient = new ClientMock((long) 501, "Vasili_" + 501,
-                new Address((long) 501, "AnyStreet"),
-                List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23")));
-
+    @DataProvider(name = "test1")
+    public static Object[][] primeNumbers() {
+        return new Object[][] {{new SimpleBuzCacheImpl(ClientMock.class)}, {new BuzCacheImpl(ClientMock.class)}};
     }
 
-    @AfterEach
-    void clearCache() {
-        buzCache.clearCache();
-    }
+    @Test(dataProvider = "test1")
+    void testAddAndUpdate(BuzCache buzCache) throws PutInCacheException {
 
-    @Test
-    void testAddAndUpdate() throws PutInCacheException {
+        List<ClientMock> clientList = getClientList();
+        ClientMock testClient = clientList.get(200);
 
         for (int i = 0; i < clientList.size(); i++) {
             ClientMock client = clientList.get(i);
-            if (i < 250) {
-                buzCache.add(client);
-            } else {
+            if (buzCache instanceof SimpleBuzCacheImpl){
                 buzCache.add(client.getId(), client);
+            }else {
+                if (i < 250) {
+                    buzCache.add(client);
+                } else {
+                    buzCache.add(client.getId(), client);
+                }
             }
         }
 
-
         assertThat(buzCache.size(ClientMock.class)).isEqualTo(500);
-
-        assertThrows(PutInCacheException.class, () -> {
-            buzCache.add(501, extraClient);
-        });
+        if (buzCache instanceof BuzCacheImpl){
+            assertThrows(PutInCacheException.class, () -> {
+                buzCache.add(501, getExtraClient());
+            });
+        }
 
         assertThat(buzCache.size(ClientMock.class)).isEqualTo(500);
 
         testClient.setName("Test");
 
-        buzCache.add(testClient);
+        buzCache.add(testClient.id, testClient);
 
         assertThat(buzCache.size(ClientMock.class)).isEqualTo(500);
 
         assertThat(buzCache.get(201, ClientMock.class).get()).isEqualTo(testClient);
 
+        assertThat(buzCache.get("name", "Test", ClientMock.class).get(0)).isEqualTo(testClient);
+
+        assertThat(buzCache.get("name", "Vasili_201", ClientMock.class).size()).isEqualTo(0);
 
     }
 
 
-    @Test
-    void testGet() throws PutInCacheException {
+    @Test(dataProvider = "test1")
+    void testGet(BuzCache buzCache) throws PutInCacheException {
+        List<ClientMock> clientList = getClientList();
+        ClientMock testClient = clientList.get(200);
+        Address testAddress = testClient.getAddress();
+        List<Phone> phones = testClient.getPhoneList();
 
         for (ClientMock client : clientList) {
-            buzCache.add(client);
+            buzCache.add(client.getId(), client);
         }
 
         assertThat(buzCache.get(201, ClientMock.class).get()).isEqualTo(testClient);
@@ -109,11 +86,12 @@ class BuzCacheImplTest {
     }
 
 
-    @Test
-    void testDelete() throws PutInCacheException {
+    @Test(dataProvider = "test1")
+    void testDelete(BuzCache buzCache) throws PutInCacheException {
+        List<ClientMock> clientList = getClientList();
 
         for (ClientMock client : clientList) {
-            buzCache.add(client);
+            buzCache.add(client.getId(), client);
         }
 
         assertThat(buzCache.size(ClientMock.class)).isEqualTo(500);
@@ -125,14 +103,40 @@ class BuzCacheImplTest {
         assertThat(buzCache.get(201, ClientMock.class).isPresent()).isEqualTo(false);
     }
 
+    private List<ClientMock> getClientList() {
+        List<ClientMock>clientList = new ArrayList<>();
+        List<Phone>phones =List.of(new Phone(1L, "13-555-22"), new Phone(2L, "13-555-23"));
+
+        for (int i = 1; i <= 500; i++) {
+            Address tempAddress = new Address((long) i, "AnyStreet");
+
+            ClientMock tempClient = new ClientMock((long) i, "Vasili_" + i,
+                    tempAddress,
+                    phones);
+            clientList.add(tempClient);
+        }
+        return clientList;
+    }
+
+    private ClientMock getExtraClient() {
+        return new ClientMock((long) 501, "Vasili_501" ,
+                new Address((long) 501, "AnyStreet"),
+                List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23")));
+    }
+
+
+    private BuzCache getBuzCache(){
+        return new BuzCacheImpl(ClientMock.class);
+    }
+    private BuzCache getSimpleBuzCache(){
+        return new SimpleBuzCacheImpl(ClientMock.class);
+    }
+
     @Cacheable(cacheSize = 500)
     private class ClientMock {
         private Long id;
-
         private String name;
-
         private List<Phone> phoneList;
-
         private Address studentAddress;
 
 
@@ -160,9 +164,10 @@ class BuzCacheImplTest {
         public Client clone() {
             List<Phone> copyPhone = new ArrayList<>(phoneList);
 
-            Address addressCopy = new Address(studentAddress.getAddressId(),studentAddress.getAddress());
-            return new Client(this.id, this.name,addressCopy,copyPhone);
+            Address addressCopy = new Address(studentAddress.getAddressId(), studentAddress.getAddress());
+            return new Client(this.id, this.name, addressCopy, copyPhone);
         }
+
         @CacheId
         public Long getId() {
             return id;
@@ -206,7 +211,7 @@ class BuzCacheImplTest {
             return "Client{" +
                     "id=" + id +
                     ", name='" + name + '\'' +
-                    ", phones=" +  builder +
+                    ", phones=" + builder +
                     ", studentAddress=" + studentAddress.getAddress() +
                     '}';
         }

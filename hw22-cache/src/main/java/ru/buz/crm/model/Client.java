@@ -8,7 +8,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Cacheable(cacheSize = 100000)
+@Cacheable(cacheSize = 500000)
 @Entity
 @Table(name = "client", uniqueConstraints = {
         @UniqueConstraint(columnNames = "ID"),
