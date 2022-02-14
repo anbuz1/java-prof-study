@@ -35,9 +35,9 @@ allprojects {
                 mavenBom("org.springframework.boot:spring-boot-dependencies:2.5.2")
             }
             dependency("com.google.guava:guava:${Versions.guava}")
-            dependency("org.openjdk.jmh:jmh-core:${Versions.jmh}")
+            dependency("org.openjdk.jmh:jmh-ru.buz.core:${Versions.jmh}")
             dependency("org.openjdk.jmh:jmh-generator-annprocess:${Versions.jmh}")
-            dependency("org.openjdk.jol:jol-core:${Versions.jol}")
+            dependency("org.openjdk.jol:jol-ru.buz.core:${Versions.jol}")
             dependency("org.ow2.asm:asm-commons:${Versions.asm}")
             dependency("org.glassfish:javax.json:${Versions.glassfishJson}")
             dependency("com.google.protobuf:protobuf-java-util:${Versions.protobuf}")

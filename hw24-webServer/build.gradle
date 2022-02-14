@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+}
+
+group 'ru.buz'
+version 'unspecified'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'ch.qos.logback:logback-classic'
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.testcontainers:postgresql'
+    implementation 'org.testcontainers:junit-jupiter'
+    implementation("ch.qos.logback:logback-classic")
+    implementation("org.hibernate:hibernate-core")
+    implementation 'org.flywaydb:flyway-core'
+    implementation("com.google.code.gson:gson:${Versions.gson}")
+
+    implementation("org.eclipse.jetty:jetty-servlet:${Versions.jetty}")
+    implementation("org.eclipse.jetty:jetty-server:${Versions.jetty}")
+    implementation("org.eclipse.jetty:jetty-webapp:${Versions.jetty}")
+    implementation("org.eclipse.jetty:jetty-security:${Versions.jetty}")
+    implementation("org.eclipse.jetty:jetty-http:${Versions.jetty}")
+    implementation("org.eclipse.jetty:jetty-io:${Versions.jetty}")
+    implementation("org.eclipse.jetty:jetty-util:${Versions.jetty}")
+    implementation("org.freemarker:freemarker:${Versions.freemarker}")
+
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
