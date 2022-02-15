@@ -2,6 +2,8 @@ package ru.buz.crm.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.buz.core.localcache.exceptions.PutInCacheException;
+import ru.buz.core.localcache.interfaces.BuzCache;
 import ru.buz.core.repository.DataTemplate;
 import ru.buz.crm.model.Client;
 import ru.buz.core.sessionmanager.TransactionManager;
@@ -14,15 +16,17 @@ public class DbServiceClientImpl implements DBServiceClient {
 
     private final DataTemplate<Client> clientDataTemplate;
     private final TransactionManager transactionManager;
+    private final BuzCache buzCache;
 
-    public DbServiceClientImpl(TransactionManager transactionManager, DataTemplate<Client> clientDataTemplate) {
+    public DbServiceClientImpl(TransactionManager transactionManager, DataTemplate<Client> clientDataTemplate, BuzCache buzCache) {
         this.transactionManager = transactionManager;
         this.clientDataTemplate = clientDataTemplate;
+        this.buzCache = buzCache;
     }
 
     @Override
     public Client saveClient(Client client) {
-        return transactionManager.doInTransaction(session -> {
+        Client clientResult = transactionManager.doInTransaction(session -> {
             var clientCloned = client.clone();
             if (client.getId() == null) {
                 clientDataTemplate.insert(session, clientCloned);
@@ -33,15 +37,29 @@ public class DbServiceClientImpl implements DBServiceClient {
             log.info("updated client: {}", clientCloned);
             return clientCloned;
         });
+        try {
+            buzCache.add(clientResult);
+        } catch (PutInCacheException e) {
+            log.info(e.toString());
+        }
+        return clientResult;
     }
 
     @Override
     public Optional<Client> getClient(long id) {
+        Optional<Client> client = buzCache.get(id, Client.class);
+        if(client.isEmpty()){
         return transactionManager.doInReadOnlyTransaction(session -> {
             var clientOptional = clientDataTemplate.findById(session, id);
             log.info("client: {}", clientOptional);
+            try {
+                buzCache.add(clientOptional.get());
+            } catch (PutInCacheException e) {
+                log.info(e.toString());
+            }
             return clientOptional;
-        });
+        });}
+        return client;
     }
     @Override
     public List<Client> getClient(String fieldName, Object value) {

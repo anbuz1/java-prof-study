@@ -7,6 +7,8 @@ import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import ru.buz.core.localcache.implementations.SimpleBuzCacheImpl;
+import ru.buz.core.localcache.interfaces.BuzCache;
 import ru.buz.core.repository.DataTemplateHibernate;
 import ru.buz.core.repository.HibernateUtils;
 import ru.buz.core.sessionmanager.TransactionManagerHibernate;
@@ -23,6 +25,7 @@ public abstract class AbstractHibernateTest {
     protected TransactionManagerHibernate transactionManager;
     protected DataTemplateHibernate<Client> clientTemplate;
     protected DBServiceClient dbServiceClient;
+    protected BuzCache buzCache;
 
     private static TestContainersConfig.CustomPostgreSQLContainer CONTAINER;
 
@@ -52,10 +55,11 @@ public abstract class AbstractHibernateTest {
         configuration.setProperty("hibernate.connection.password", dbPassword);
 
         sessionFactory = HibernateUtils.buildSessionFactory(configuration, Client.class);
+        buzCache = new SimpleBuzCacheImpl();
 
         transactionManager = new TransactionManagerHibernate(sessionFactory);
         clientTemplate = new DataTemplateHibernate<>(Client.class);
-        dbServiceClient = new DbServiceClientImpl(transactionManager, clientTemplate);
+        dbServiceClient = new DbServiceClientImpl(transactionManager, clientTemplate, buzCache);
     }
 
     protected EntityStatistics getUsageStatistics() {

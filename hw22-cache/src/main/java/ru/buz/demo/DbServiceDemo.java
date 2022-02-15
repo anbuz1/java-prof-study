@@ -33,73 +33,42 @@ public class DbServiceDemo {
 
     public static void main(String[] args) throws NoSuchFieldException {
 
-        var buzCache = new BuzCacheImpl(Client.class, Address.class, Phone.class);
-        var buzCachesimple = new SimpleBuzCacheImpl(Client.class, Address.class, Phone.class);
 
-//        var configuration = new Configuration().configure(HIBERNATE_CFG_FILE);
+        var configuration = new Configuration().configure(HIBERNATE_CFG_FILE);
 
-//        var dbUrl = configuration.getProperty("hibernate.connection.url");
-//        var dbUserName = configuration.getProperty("hibernate.connection.username");
-//        var dbPassword = configuration.getProperty("hibernate.connection.password");
-//
-//        new MigrationsExecutorFlyway(dbUrl, dbUserName, dbPassword).executeMigrations();
-//
-//        var sessionFactory = HibernateUtils.buildSessionFactory(configuration, Client.class, Address.class, Phone.class);
-//
-//        var transactionManager = new TransactionManagerHibernate(sessionFactory);
-/////
-//        var clientTemplate = new DataTemplateHibernate<>(Client.class);
-///
-//        var dbServiceClient = new DbServiceClientImpl(transactionManager, clientTemplate);
+        var dbUrl = configuration.getProperty("hibernate.connection.url");
+        var dbUserName = configuration.getProperty("hibernate.connection.username");
+        var dbPassword = configuration.getProperty("hibernate.connection.password");
+
+        new MigrationsExecutorFlyway(dbUrl, dbUserName, dbPassword).executeMigrations();
+
+        var sessionFactory = HibernateUtils.buildSessionFactory(configuration, Client.class, Address.class, Phone.class);
+
+        var transactionManager = new TransactionManagerHibernate(sessionFactory);
+        var clientTemplate = new DataTemplateHibernate<>(Client.class);
+
+        var dbServiceClient = new DbServiceClientImpl(transactionManager, clientTemplate, new SimpleBuzCacheImpl());
         for (int i = 1; i <= CLIENT_NUMBER; i++) {
             Client tempClient = new Client((long) i, "Vasya_" + i, new Address(null, "AnyStreet"), List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23")));
-//            dbServiceClient.saveClient(tempClient);
-            try {
-                buzCache.add(tempClient.getId(), tempClient);
-                buzCachesimple.add(tempClient.getId(), tempClient);
-            } catch (PutInCacheException e) {
-                e.printStackTrace();
-            }
+            dbServiceClient.saveClient(tempClient);
         }
 
 
-        System.out.println("--------------------------------Start select from SIMPLE cache-----------------------------------");
-        long start = System.currentTimeMillis();
-        int count = 0;
-        for (int i = 1; i <= CLIENT_NUMBER; i++) {
-            Client tempClient = buzCachesimple.get("name", "Vasya_" + i, Client.class).get(0);
-        }
-        System.out.println();
-        long end = System.currentTimeMillis();
-        System.out.println("TOTAL TIME: " + (end - start));
-        System.out.println("--------------------------------End select from cache-------------------------------------");
-
-        System.out.println("--------------------------------Start2 select from MAIN cache-----------------------------------");
-        start = System.currentTimeMillis();
-        count = 0;
-        for (int i = 1; i <= CLIENT_NUMBER; i++) {
-            Client tempClient = buzCache.get("name", "Vasya_" + i, Client.class).get(0);
-        }
-        System.out.println();
-        end = System.currentTimeMillis();
-        System.out.println("TOTAL TIME: " + (end - start));
-        System.out.println("--------------------------------End2 select from cache-------------------------------------");
 
 
+        dbServiceClient.saveClient(new Client(null, "Vasya", new Address(null, "AnyStreet"), List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23"))));
 
-//        dbServiceClient.saveClient(new Client(null, "Vasya", new Address(null, "AnyStreet"), List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23"))));
-//
-//        var clientSecond = dbServiceClient.saveClient(new Client(null, "Petya", new Address(null, "AnyStreet2"), List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23"))));
-//        var clientSecondSelected = dbServiceClient.getClient(clientSecond.getId())
-//                .orElseThrow(() -> new RuntimeException("Client not found, id:" + clientSecond.getId()));
-//        log.info("clientSecondSelected:{}", clientSecondSelected);
-/////
-//        dbServiceClient.saveClient(new Client(clientSecondSelected.getId(), "dbServiceSecondUpdated", new Address(null, "AnyStreet2"), List.of(new Phone(null, "13-555-22"))));
-//        var clientUpdated = dbServiceClient.getClient(clientSecondSelected.getId())
-//                .orElseThrow(() -> new RuntimeException("Client not found, id:" + clientSecondSelected.getId()));
-//        log.info("clientUpdated:{}", clientUpdated);
-//
-//        log.info("All clients");
-//        dbServiceClient.findAll().forEach(client -> log.info("client:{}", client));
+        var clientSecond = dbServiceClient.saveClient(new Client(null, "Petya", new Address(null, "AnyStreet2"), List.of(new Phone(null, "13-555-22"), new Phone(null, "13-555-23"))));
+        var clientSecondSelected = dbServiceClient.getClient(clientSecond.getId())
+                .orElseThrow(() -> new RuntimeException("Client not found, id:" + clientSecond.getId()));
+        log.info("clientSecondSelected:{}", clientSecondSelected);
+///
+        dbServiceClient.saveClient(new Client(clientSecondSelected.getId(), "dbServiceSecondUpdated", new Address(null, "AnyStreet2"), List.of(new Phone(null, "13-555-22"))));
+        var clientUpdated = dbServiceClient.getClient(clientSecondSelected.getId())
+                .orElseThrow(() -> new RuntimeException("Client not found, id:" + clientSecondSelected.getId()));
+        log.info("clientUpdated:{}", clientUpdated);
+
+        log.info("All clients");
+        dbServiceClient.findAll().forEach(client -> log.info("client:{}", client));
     }
 }
