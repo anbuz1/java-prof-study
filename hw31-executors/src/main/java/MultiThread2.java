@@ -5,11 +5,13 @@ public class MultiThread2 {
     private final int COUNT_LIMIT = 10;
     private final Object monitor = new Object();
     private static final Logger logger = LoggerFactory.getLogger(MultiThread.class);
+    private boolean isStarted;
 
     private int count = 1;
     private boolean downFlag;
 
     private void task1() {
+        isStarted = true;
         while (count != 0) {
             synchronized (monitor) {
                 logger.info(String.valueOf(count));
@@ -54,6 +56,7 @@ public class MultiThread2 {
     public static void main(String[] args) {
         MultiThread2 multiThread = new MultiThread2();
         new Thread(multiThread::task1).start();
+        while (!multiThread.isStarted){}
         new Thread(multiThread::task2).start();
     }
 }

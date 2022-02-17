@@ -48,7 +48,9 @@ public class MultiThread {
 
     public static void main(String[] args) {
         MultiThread multiThread = new MultiThread();
-        new Thread(multiThread::counting).start();
+        Thread thread = new Thread(multiThread::counting);
+        thread.start();
+        while (!thread.isAlive()){}
         new Thread(multiThread::counting).start();
     }
 }
