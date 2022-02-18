@@ -26,6 +26,9 @@ public class MultiThread2 {
     }
 
     private void task2() {
+        if(!isStarted){
+            while (!isStarted){}
+        }
         while (count != 0) {
             synchronized (monitor) {
                 logger.info(String.valueOf(count));
@@ -56,7 +59,6 @@ public class MultiThread2 {
     public static void main(String[] args) {
         MultiThread2 multiThread = new MultiThread2();
         new Thread(multiThread::task1).start();
-        while (!multiThread.isStarted){}
         new Thread(multiThread::task2).start();
     }
 }

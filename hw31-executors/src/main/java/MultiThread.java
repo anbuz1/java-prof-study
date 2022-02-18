@@ -6,9 +6,18 @@ public class MultiThread {
     private static final Logger logger = LoggerFactory.getLogger(MultiThread.class);
     private boolean whoIsInCharge = true;
     private boolean downFlag;
+    private boolean isStarted;
     private int count = 1;
 
     private synchronized void counting() {
+        String name = Thread.currentThread().getName();
+        if (name.equals("Thread-1") & !isStarted) {
+            while (!isStarted) {
+            }
+        }
+        if (name.equals("Thread-0") & !isStarted) {
+            isStarted = true;
+        }
         try {
             while (count != 0) {
                 this.notifyAll();
@@ -48,9 +57,7 @@ public class MultiThread {
 
     public static void main(String[] args) {
         MultiThread multiThread = new MultiThread();
-        Thread thread = new Thread(multiThread::counting);
-        thread.start();
-        while (!thread.isAlive()){}
+        new Thread(multiThread::counting).start();
         new Thread(multiThread::counting).start();
     }
 }
