@@ -4,7 +4,7 @@ import com.google.common.collect.Iterables;
 
 import java.util.Arrays;
 
-public class App {
+public class AppTest {
     public static void main(String[] args) {
         if (args.length > 0) {
             for (String arg : args) {

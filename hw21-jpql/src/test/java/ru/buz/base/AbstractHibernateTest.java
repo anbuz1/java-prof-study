@@ -15,7 +15,7 @@ import ru.buz.crm.model.Client;
 import ru.buz.crm.service.DBServiceClient;
 import ru.buz.crm.service.DbServiceClientImpl;
 
-import static ru.buz.demo.DbServiceDemo.HIBERNATE_CFG_FILE;
+import static ru.buz.demo.DbServiceDemo1.HIBERNATE_CFG_FILE;
 
 
 public abstract class AbstractHibernateTest {
