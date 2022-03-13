@@ -13,10 +13,16 @@ public class MultiThread {
         String name = Thread.currentThread().getName();
         if (name.equals("Thread-1") & !isStarted) {
             while (!isStarted) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
         if (name.equals("Thread-0") & !isStarted) {
             isStarted = true;
+            this.notifyAll();
         }
         try {
             while (count != 0) {
@@ -57,7 +63,12 @@ public class MultiThread {
 
     public static void main(String[] args) {
         MultiThread multiThread = new MultiThread();
-        new Thread(multiThread::counting).start();
-        new Thread(multiThread::counting).start();
+        Thread thread = new Thread(multiThread::counting);
+        Thread thread1 = new Thread(multiThread::counting);
+        thread.setName("Thread-0");
+        thread1.setName("Thread-1");
+
+        thread1.start();
+        thread.start();
     }
 }
